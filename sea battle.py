@@ -4,11 +4,16 @@ ally_board = [['O', 'O', 'O', 'O', 'O', 'O'],
               ['O', 'O', 'O', 'O', 'O', 'O'],
               ['O', 'O', 'O', 'O', 'O', 'O'],
               ['O', 'O', 'O', 'O', 'O', 'O'],
-              ['O', 'O', 'O', 'O', 'O', 'O'],]
+              ['O', 'O', 'O', 'O', 'O', 'O']]
 print(ally_board)
+access = False
 
 
 class Notifications:
+    @staticmethod
+    def side_decide_message():
+        return input('Left/Right : ').lower()
+
     @staticmethod
     def move_message():
         print('Your turn, example: (X,Y)')
@@ -50,18 +55,25 @@ class Board:
 
     @staticmethod
     def get_ally_map():
-        print('  |', *[f'{i} |' for i in range(1, 7)])
+        print(' '*4, '-'*27)
+        print(' '*12, 'Your map')
+        print(' '*5,'|', *[f'{i} |' for i in range(1, 7)])
+        print()
         for i, line in enumerate(ally_board):
-            print(f'{i+1} | ', end='')
+            print(f'{i+1} |   | ', end='')
             print(*line, sep=' | ', end=' |\n')
 
 
 class Dot:
     used_dots = []
     placed_ships = []
+    message = Notifications()
 
-    def __init__(self, x, y):
-        self.cord = (x, y)
+    def __init__(self, x, y, curr_ship):
+        self.cord = (x - 1, y - 1)
+        self.x = x - 1
+        self.y = y - 1
+        self.ship = curr_ship
 
     def __eq__(self, other):
         if self.cord == other.cord:
@@ -70,13 +82,38 @@ class Dot:
     def __str__(self):
         return f'{self.cord}'
 
-    def placing_ships(self):
-        if self.cord not in self.placed_ships:
-            self.placed_ships.append(self.cord)
-            ally_board[self.cord[1]-1][self.cord[0]-1] = '☑'
-            print(f'cord 1 ={self.cord[1]} //// cord 0 ={self.cord[0]}')
+    def check_side(self, coordinate):
+        side = self.message.side_decide_message()
+        if side == 'left':
+            if coordinate - self.ship.length >= 0:
+                global access
+                access = True
+                return
+            else:
+                # TODO: raise Error
         else:
-            print('Already used. TODO!')
+            if coordinate + self.ship.length <= 6:
+                global access
+                access = True
+            else:
+                # TODO: raise Error
+    def placing_ships(self):
+        global access
+        access = False
+        print(f'Your {self.ship.length} ship placing')
+        if self.cord not in self.placed_ships:
+            while not access:
+                if self.ship.side == 'H':
+                    self.check_side(self.x)
+                else:
+                    self.check_side(self.y)
+
+
+            ally_board[self.cord[1]][self.cord[0]] = '☑'
+            print(f'cord 1 ={self.cord[1]+1} //// cord 0 ={self.cord[0]+1}')
+            self.placed_ships.append(self.cord)
+        else:
+            print('Already placed in this spot. TODO!')
 
 
 class Move:
@@ -100,12 +137,13 @@ class Game(Player, Board, Dot):
             self.ships.append(Ship())
 
     def place_ship(self):
-        for ship in self.ships:
-            self.get_ally_map()
-            dot = input(self.message.placement_message())
-            Dot(*map(int, dot.split())).placing_ships()
-            print(Dot(*map(int, dot.split())))
-            print(ally_board)
+        access = False
+        while not access:
+            for ship in self.ships:
+                self.get_ally_map()
+                dot = input(self.message.placement_message())
+                point = Dot(*map(int, dot.split()), ship)
+                point.placing_ships()
 
 
 test = Board()

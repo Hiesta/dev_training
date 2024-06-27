@@ -1,4 +1,11 @@
 from random import randint
+ally_board = [['O', 'O', 'O', 'O', 'O', 'O'],
+              ['O', 'O', 'O', 'O', 'O', 'O'],
+              ['O', 'O', 'O', 'O', 'O', 'O'],
+              ['O', 'O', 'O', 'O', 'O', 'O'],
+              ['O', 'O', 'O', 'O', 'O', 'O'],
+              ['O', 'O', 'O', 'O', 'O', 'O'],]
+print(ally_board)
 
 
 class Notifications:
@@ -39,12 +46,12 @@ class Player:
 
 
 class Board:
-    ally_board = [['O'] * 6] * 6
     enemy_board = ally_board.copy()
 
-    def get_ally_map(self):
+    @staticmethod
+    def get_ally_map():
         print('  |', *[f'{i} |' for i in range(1, 7)])
-        for i, line in enumerate(self.ally_board):
+        for i, line in enumerate(ally_board):
             print(f'{i+1} | ', end='')
             print(*line, sep=' | ', end=' |\n')
 
@@ -60,9 +67,16 @@ class Dot:
         if self.cord == other.cord:
             raise ValueError('This point is already placed')
 
+    def __str__(self):
+        return f'{self.cord}'
+
     def placing_ships(self):
         if self.cord not in self.placed_ships:
             self.placed_ships.append(self.cord)
+            ally_board[self.cord[1]-1][self.cord[0]-1] = '☑'
+            print(f'cord 1 ={self.cord[1]} //// cord 0 ={self.cord[0]}')
+        else:
+            print('Already used. TODO!')
 
 
 class Move:
@@ -75,7 +89,7 @@ class Move:
         print(move.split())  # TODO: DOT REFACT CLASS
 
 
-class Game(Player, Board):
+class Game(Player, Board, Dot):
     def init_ships(self):
         for _, length in zip(range(3), [3, 2, 2]):
             orientation = input(self.message.orient_message().format(length))
@@ -89,10 +103,13 @@ class Game(Player, Board):
         for ship in self.ships:
             self.get_ally_map()
             dot = input(self.message.placement_message())
-            Dot(*map(int, dot.split()))
+            Dot(*map(int, dot.split())).placing_ships()
+            print(Dot(*map(int, dot.split())))
+            print(ally_board)
 
 
 test = Board()
 test.get_ally_map()
 test_player = Game()
 test_player.init_ships()
+test_player.place_ship()
